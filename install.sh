@@ -176,7 +176,7 @@ ask() {
 tui() {
   local res
   theme=$(ask "Choose a theme" gruvbox "${THEMES[@]}")
-  res=$(ask "Choose a resolution" "$RES" 1920x1080 2560x1440 3840x2160 2560x1080 3440x1440 1600x900 custom)
+  res=$(ask "Choose a resolution" "$RES" 1280x720 1366x768 1600x900 1920x1080 1920x1200 2560x1080 2560x1440 2560x1600 3440x1440 3840x2160 custom)
   if [[ $res == custom ]]; then
     read -r -p "Resolution (WxH): " res </dev/tty
     [[ $res =~ ^[0-9]+x[0-9]+$ ]] || die "invalid resolution '$res'"

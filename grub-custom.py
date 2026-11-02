@@ -2,8 +2,12 @@
 """GRUB theme builder with a mouse-driven layout editor.
 
   grub-custom.py get KEY            print one setting
+  grub-custom.py show               print all settings
+  grub-custom.py resolutions        list common resolutions (any WxH is accepted)
   grub-custom.py set KEY VALUE      change a setting: name, wallpaper, resolution, font_size, text, selected_text,
-                                    highlight, card_style (blurry|full|invisible), card_color, radius, entries
+                                    highlight, highlight_style, info_color, timeout_color, timeout_text,
+                                    card_style (blurry|full|invisible), card_color, radius, item_spacing,
+                                    icon_size, entries
   grub-custom.py layout             drag/resize the boot menu, info bar and countdown label
   grub-custom.py list               list themes (name<TAB>bundled|variant|builder)
   grub-custom.py edit THEME RESULT  edit a theme's layout; saves as THEME-mineN, writes its name to RESULT
@@ -36,6 +40,7 @@ NERD_TTF = [
 MARKER = "theme.json"
 INFO_RATIO = 42 / 480
 BASE_RES = (1920, 1080)
+RESOLUTIONS = ["1280x720", "1366x768", "1600x900", "1920x1080", "1920x1200", "2560x1080", "2560x1440", "2560x1600", "3440x1440", "3840x2160"]
 
 DEFAULTS = {
     "name": "custom",
@@ -923,6 +928,11 @@ def main():
     cmd, args, cfg = sys.argv[1], sys.argv[2:], load()
     if cmd == "get":
         print(cfg[args[0]])
+    elif cmd == "show":
+        for k, v in cfg.items():
+            print(f"{k} = {v}")
+    elif cmd == "resolutions":
+        print("\n".join(RESOLUTIONS), "(any WxH works)", sep="\n")
     elif cmd == "set":
         key, value = args[0], " ".join(args[1:])
         if key == "resolution":

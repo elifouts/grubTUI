@@ -172,7 +172,7 @@ screen_install() {
   done < <(python3 "$CUSTOM_PY" list)
   menu "Choose a theme" "" "${items[@]}" || return
   local theme=$CHOSEN
-  local resl=(1920x1080 2560x1440 3840x2160 2560x1080 3440x1440 1600x900 custom)
+  local resl=(1280x720 1366x768 1600x900 1920x1080 1920x1200 2560x1080 2560x1440 2560x1600 3440x1440 3840x2160 custom)
   menu "Resolution for $theme" "" "${resl[@]}" || return
   local res=${resl[$CHOICE]}
   if [[ $res == custom ]]; then
@@ -397,7 +397,7 @@ screen_appearance() {
 
 screen_custom() {
   local wp res nm
-  local resl=(1920x1080 2560x1440 3840x2160 2560x1080 3440x1440 1600x900 custom)
+  local resl=(1280x720 1366x768 1600x900 1920x1080 1920x1200 2560x1080 2560x1440 2560x1600 3440x1440 3840x2160 custom)
   while true; do
     nm=$(cfg_get name); wp=$(cfg_get wallpaper); res=$(cfg_get resolution)
     local wl=${wp:-<not set>}; ((${#wl} > 36)) && wl="…${wl: -35}"
