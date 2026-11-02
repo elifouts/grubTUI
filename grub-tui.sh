@@ -52,7 +52,7 @@ box() {
   at $((r + h - 1)) "$c"; printf '%s╰%s╯%s' "$col" "$(rep ─ $((w - 2)))" "$R"
 }
 
-installed_list() { local t; for t in "${THEMES[@]}"; do [[ -f "$GRUB_DIR/themes/$t/theme.txt" ]] && echo "$t"; done; }
+installed_list() { local t; for t in "${THEMES[@]}"; do $SUDO test -f "$GRUB_DIR/themes/$t/theme.txt" && echo "$t"; done; }
 active_theme() { sed -nE 's|^GRUB_THEME="?.*/([^/]+)/theme.txt.*|\1|p' "$CONF" 2>/dev/null | head -1; }
 
 COLS=80 ROWS=24 OFF=0 UW=80
@@ -454,7 +454,7 @@ screen_edit_layout() {
   fi
 }
 
-theme_installed() { [[ -f "$GRUB_DIR/themes/$1/theme.txt" ]]; }
+theme_installed() { $SUDO test -f "$GRUB_DIR/themes/$1/theme.txt"; }
 
 delete_theme_action() {
   theme_installed "$1" && { $SUDO "$INSTALL" -r "$1" || return 1; }
