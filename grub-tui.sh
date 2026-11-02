@@ -28,8 +28,8 @@ fi
 
 # ---- style ----
 R=$'\e[0m' B=$'\e[1m' D=$'\e[2m'
-ACC=$'\e[38;5;75m' OK=$'\e[38;5;114m' WARN=$'\e[38;5;215m' ERR=$'\e[38;5;203m' MUT=$'\e[38;5;245m'
-SELBG=$'\e[48;5;24m\e[38;5;231m'
+ACC=$'\e[36m' OK=$'\e[32m' WARN=$'\e[33m' ERR=$'\e[31m' MUT=$'\e[2m'
+SELBG=$'\e[7m'
 
 THEMES=(); for d in "$REPO_DIR"/themes/*/; do THEMES+=("$(basename "$d")"); done
 ICON_SETS=(keep); for d in "$REPO_DIR"/assets/assets-*/; do n=$(basename "$d"); n=${n#assets-}; [[ $n == select ]] || ICON_SETS+=("$n"); done

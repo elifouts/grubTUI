@@ -122,7 +122,7 @@ def editor(stdscr, cfg, save_fn=None):
     lay = cfg["layout"]
     curses.curs_set(0)
     curses.use_default_colors()
-    for i, col in enumerate((33, 71, 173), 1):
+    for i, col in enumerate((curses.COLOR_BLUE, curses.COLOR_GREEN, curses.COLOR_YELLOW), 1):
         curses.init_pair(i, curses.COLOR_BLACK, col)
         curses.init_pair(i + 3, col, -1)
     curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
