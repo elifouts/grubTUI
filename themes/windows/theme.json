@@ -1,0 +1,1 @@
+{"kind": "variant", "base": "windows", "resolution": "1920x1080", "style": {"text": "#ffffff", "selected_text": "#0a78d7", "highlight": "#ffffff", "highlight_style": "full", "card_style": "blurry", "card_color": "#101820", "info_color": "#ffffff", "timeout_color": "#ffffff", "timeout_text": "Booting in %d seconds", "radius": 9}}
