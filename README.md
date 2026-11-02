@@ -13,7 +13,9 @@ A terminal interface to install, create, edit, and manage GRUB themes. Based on 
 </p>
 ## Requirements
 
-Bash, sudo, GRUB, Python 3, and Pillow. Install Pillow with `pip install -r requirements.txt`.
+**Warning:** Pillow is required to run the TUI and create or edit themes. Install it with `pip install -r requirements.txt`.
+
+Bash, sudo, GRUB, and Python 3 are also required.
 
 ## TUI
 

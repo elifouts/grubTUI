@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# GRUB Theme Studio: one TUI to install, manage and uninstall themes (drives install.sh).
 set -uo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -14,7 +13,6 @@ CONF=${GRUB_DEFAULTS:-/etc/default/grub}
 SUDO=""; [[ $EUID -eq 0 ]] || SUDO="sudo"
 if [[ -n $SUDO ]]; then command -v sudo >/dev/null || { echo "sudo required" >&2; exit 1; }; sudo -v || exit 1; fi
 
-# Pillow is required by the custom theme builder
 if ! python3 -c 'import PIL' 2>/dev/null; then
   echo "Pillow (python imaging) is missing; it is needed to build themes."
   read -r -p "Install it now? [Y/n] " ans
@@ -26,7 +24,6 @@ if ! python3 -c 'import PIL' 2>/dev/null; then
   fi
 fi
 
-# ---- style ----
 R=$'\e[0m' B=$'\e[1m' D=$'\e[2m'
 ACC=$'\e[36m' OK=$'\e[32m' WARN=$'\e[33m' ERR=$'\e[31m' MUT=$'\e[2m'
 SELBG=$'\e[7m'
@@ -42,15 +39,12 @@ printf '\e[?1049h\e[?25l'
 at() { printf '\e[%d;%dH' "$1" "$2"; }
 rep() { local s; ((${2:-0} > 0)) || return 0; printf -v s '%*s' "$2" ''; printf '%s' "${s// /$1}"; }
 
-# visible length of a string without ANSI escapes
-# sets VL (no subshell, so it is cheap to call per row)
 vlen() {
   local s=$1
   while [[ $s =~ $'\e'\[[0-9\;]*m ]]; do s=${s//"${BASH_REMATCH[0]}"/}; done
   VL=${#s}
 }
 
-# box ROW COL WIDTH HEIGHT TITLE [COLOR]
 box() {
   local r=$1 c=$2 w=$3 h=$4 t=$5 col=${6:-$ACC} i
   at "$r" "$c"; printf '%s╭─ %s%s%s %s╮%s' "$col" "$B" "$t" "$R$col" "$(rep ─ $((w - ${#t} - 5)))" "$R"
@@ -68,17 +62,14 @@ size() {
   OFF=$(((COLS - UW) / 2))
 }
 
-# ctr ROW TEXT [STYLE]: print TEXT centered on the terminal
 ctr() { at "$1" $(((COLS - ${#2}) / 2 + 1)); printf '%s%s%s' "${3:-}" "$2" "$R"; }
-# ctrl ROW TEXT [STYLE]: like ctr but first erases the whole row, so shorter text leaves no residue
 ctrl() { at "$1" 1; printf '\e[2K'; ctr "$@"; }
 
 LOGO_ROWS=5
 CRUMB="Main menu"
 
-# sub TITLE FUNC...: run a screen with TITLE appended to the breadcrumb
 sub() { local saved=$CRUMB; CRUMB="$CRUMB  ›  $1"; shift; "$@"; CRUMB=$saved; }
-frame() { # footer
+frame() {
   size; printf '\e[?2026h\e[H'; [[ -z ${KEEP:-} ]] && printf '\e[2J'
   local logo=(
     '  ___ ___ _   _ ___   _____ _  _ ___ __  __ ___ ___ '
@@ -89,12 +80,8 @@ frame() { # footer
   ctr 6 "$CRUMB" "$MUT"
   ctrl "$ROWS" "$1" "$MUT"
 }
-# call after drawing a screen
 flush() { printf '\e[?2026l'; }
 
-# menu TITLE NOTE ITEM... -> sets CHOICE (index) and CHOSEN (label) or returns 1 on back
-# ITEM is "label" or "label::description"; "##Heading" is a non-selectable section heading.
-# NUMBERED=1 menu ... adds 1-9 hotkeys. Only the rows that change are redrawn when moving.
 menu() {
   local title=$1 note=$2; shift 2
   local items=("$@") n=$# sel=-1 prev k rest i w=0 top left label num
@@ -110,7 +97,7 @@ menu() {
   ((w < ${#title} + 8)) && w=$((${#title} + 8)); ((w < 46)) && w=46
   num=0; for ((i = 0; i < n; i++)); do if ((heads[i] == 0)); then num=$((num + 1)); nums[i]=$num; else nums[i]=0; fi; done
 
-  draw_row() { # index selected?
+  draw_row() {
     local i=$1 lead="  " vl pad
     at $((top + 2 + i)) $((left + 2))
     if ((heads[i])); then printf ' %s── %s ──%s' "$MUT$B" "${labels[i]}" "$R"; return; fi
@@ -151,7 +138,7 @@ menu() {
   done
 }
 
-run_action() { # show command output on a clean screen
+run_action() {
   printf '\e[H\e[2J\e[?25h'
   printf '%s%s%s\n\n' "$ACC$B" "▌ $1" "$R"; shift
   "$@"; local rc=$?
@@ -186,8 +173,6 @@ HIDDEN_FILE=${GRUB_HIDDEN:-/etc/grub-hidden-entries}
 ORDER_FILE=${GRUB_ORDER:-/etc/grub-entry-order}
 ENTRIES_PY="$REPO_DIR/grub-entries.py"
 
-# Left = hidden from the boot menu (still detected), right = boot menu as a tree.
-# Enter hides/shows, K/J (or Shift+↑/↓) reorders top-level entries.
 screen_entries() {
   local pane=1 s0=0 s1=0 off0=0 off1=0 k rest i w x top vis p cnt sel off name label status="" want="" kind depth title
   local -a h_t s_t s_d
@@ -280,7 +265,6 @@ screen_uninstall() {
 
 cfg_get() { python3 "$CUSTOM_PY" get "$1" 2>/dev/null; }
 
-# ask_text LABEL DEFAULT -> sets REPLY (readline editing, tab completes paths)
 ask_text() {
   printf '\e[H\e[2J\e[?25h'
   printf '%s%s%s\n\n' "$ACC$B" "▌ $1" "$R"
@@ -288,7 +272,7 @@ ask_text() {
   printf '\e[?25l'
 }
 
-custom_set() { # KEY VALUE
+custom_set() {
   local out
   out=$(python3 "$CUSTOM_PY" set "$1" "$2" 2>&1) || { run_action "Invalid value" bash -c 'echo "$1"; exit 1' _ "$out"; }
 }
@@ -299,7 +283,6 @@ build_and_apply() {
   GRUB_ENTRY_COUNT=$n python3 "$CUSTOM_PY" build && $SUDO "$INSTALL" -t "$(cfg_get name)" -c "$(cfg_get resolution)"
 }
 
-# Left/Right adjust, Enter keeps, q cancels. Prints a live rounded-card preview.
 radius_slider() {
   local r=$1 k rest i line KEEP=""
   while true; do
@@ -330,12 +313,11 @@ radius_slider() {
 
 PRESETS=("#ffffff White" "#000000 Black" "#0a78d7 Windows blue" "#2f95f0 Sky" "#83a598 Gruvbox aqua" "#b8bb26 Gruvbox green" "#fabd2f Gruvbox yellow" "#fb4934 Red" "#d3869b Pink" "#cba6f7 Lavender" "#a6e3a1 Mint" "#f9e2af Cream" "#101820 Midnight" "#282828 Charcoal")
 
-swatch() { # #rrggbb -> colored block
+swatch() {
   local h=${1#\#}
   printf '\e[48;2;%d;%d;%dm  \e[0m' $((16#${h:0:2})) $((16#${h:2:2})) $((16#${h:4:2}))
 }
 
-# pick_color LABEL KEY: preset list with swatches, or type a hex value
 pick_color() {
   local label=$1 key=$2 cur items=() p
   cur=$(cfg_get "$key")
@@ -346,7 +328,7 @@ pick_color() {
   else ask_text "$label (#rrggbb)" "$cur"; [[ -n $REPLY ]] && custom_set "$key" "$REPLY"; fi
 }
 
-pick_number() { # LABEL KEY VALUE...
+pick_number() {
   local label=$1 key=$2; shift 2
   local vals=("$@")
   menu "$label (now $(cfg_get "$key"))" "" "${vals[@]}" "Type a number…" || return
@@ -354,8 +336,6 @@ pick_number() { # LABEL KEY VALUE...
   else ask_text "$label" "$(cfg_get "$key")"; [[ -n $REPLY ]] && custom_set "$key" "$REPLY"; fi
 }
 
-# Every look-and-feel option of the theme, grouped by what it styles.
-# STYLE_ONLY=1 (edited copies of bundled themes) hides the options that need the wallpaper builder.
 screen_appearance() {
   local sw labels keys i
   sw() { printf '%s' "$(swatch "$(cfg_get "$1")") $(cfg_get "$1")"; }
@@ -369,10 +349,15 @@ screen_appearance() {
     local wpl; wpl=$(cfg_get wallpaper); wpl=${wpl:-<unchanged>}; ((${#wpl} > 30)) && wpl="…${wpl: -29}"
     labels+=("Background image       $wpl")
     keys+=(wallpaper)
-    if [[ -z ${STYLE_ONLY:-} ]]; then
-      labels+=("Font size              $(cfg_get font_size)" "Icon size              $(cfg_get icon_size)" "Item spacing           $(cfg_get item_spacing)")
-      keys+=(font_size icon_size item_spacing)
-    fi
+    local font_family; font_family=$(cfg_get font_family)
+    local font_label="JetBrains Nerd"
+    [[ $font_family == terminus ]] && font_label="Terminus (16)"
+    [[ $font_family == keep ]] && font_label="Keep current"
+    labels+=("Font                  $font_label")
+    keys+=(font_family)
+    [[ $font_family == nerd ]] && { labels+=("Font size              $(cfg_get font_size)"); keys+=(font_size); }
+    labels+=("Icon size              $(cfg_get icon_size)" "Item spacing           $(cfg_get item_spacing)")
+    keys+=(icon_size item_spacing)
     menu "Appearance" "" "${labels[@]}" || return
     case ${keys[$CHOICE]} in
       text) pick_color "Menu text color" text ;;
@@ -388,6 +373,16 @@ screen_appearance() {
       card_color) pick_color "Menu background color" card_color ;;
       wallpaper) ask_text "Path to background image (png/jpg/webp/…)" "$(cfg_get wallpaper)"; [[ -n $REPLY ]] && custom_set wallpaper "$REPLY" ;;
       radius) radius_slider "$(cfg_get radius)" && custom_set radius "$RADIUS" ;;
+      font_family)
+        if [[ -n ${STYLE_ONLY:-} ]]; then
+          menu "Font family" "Keep current or choose a bundled font" \
+            "Keep current" "JetBrains Mono Nerd Font" "Terminus Regular 16" || continue
+          case $CHOICE in 0) custom_set font_family keep ;; 1) custom_set font_family nerd ;; 2) custom_set font_family terminus ;; esac
+        else
+          menu "Font family" "Terminus uses its bundled 16px font; JetBrains Nerd supports font sizing" \
+            "JetBrains Mono Nerd Font" "Terminus Regular 16" || continue
+          if [[ $CHOICE == 0 ]]; then custom_set font_family nerd; else custom_set font_family terminus; fi
+        fi ;;
       font_size) pick_number "Font size" font_size 18 20 22 24 26 28 30 32 36 ;;
       icon_size) pick_number "Icon size" icon_size 24 32 48 64 ;;
       item_spacing) pick_number "Item spacing" item_spacing 0 5 10 15 20 ;;
@@ -434,7 +429,6 @@ screen_timeout() {
   [[ -n $val ]] && run_action "Setting boot timeout to $val" $SUDO "$INSTALL" -T "$val"
 }
 
-# Pick a theme, drag/resize its layout, save into it and apply it
 screen_edit_layout() {
   local items=() name kind res=$TMPDIR_UI/result
   while IFS=$'\t' read -r name kind; do
@@ -462,17 +456,16 @@ screen_edit_layout() {
 
 theme_installed() { [[ -f "$GRUB_DIR/themes/$1/theme.txt" ]]; }
 
-delete_theme_action() { # NAME
+delete_theme_action() {
   theme_installed "$1" && { $SUDO "$INSTALL" -r "$1" || return 1; }
   python3 "$CUSTOM_PY" delete "$1"
 }
 
-restyle_and_install() { # NAME
+restyle_and_install() {
   python3 "$CUSTOM_PY" restyle "$1" && $SUDO "$INSTALL" -t "$1" -c 1920x1080
 }
 
-# Change the colors/card/fonts of a custom theme you already made, then rebuild and apply it
-edit_appearance() { # NAME KIND
+edit_appearance() {
   local name=$1 kind=$2 out
   if [[ $kind == bundled ]]; then
     python3 "$CUSTOM_PY" adopt "$name" || return
@@ -495,7 +488,6 @@ edit_appearance() { # NAME KIND
   unset GRUB_CUSTOM_CFG
 }
 
-# Themes you made: apply, restyle or delete them
 screen_my_themes() {
   local items name kind act sub
   local -A kinds

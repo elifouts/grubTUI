@@ -1,4 +1,3 @@
-# BSOD-style GRUB theme ("Your PC is okay"), edit directly
 title-text: ""
 desktop-image: "background.jpg"
 desktop-color: "#0a78d7"

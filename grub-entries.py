@@ -30,7 +30,6 @@ def read_list(path):
 
 
 def norm(title):
-    # version numbers change on kernel updates; keep ordering stable across them
     return re.sub(r"\S*\d\S*", "#", title)
 
 

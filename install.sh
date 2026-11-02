@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-# Installs one of the local themes in ./themes (gruvbox | windows).
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -37,7 +36,6 @@ else GRUB_DIR=/boot/grub; fi
 THEMES_DEST="$GRUB_DIR/themes"
 CONF=${GRUB_DEFAULTS:-/etc/default/grub}
 
-# Replace, uncomment or append KEY=VALUE in the grub defaults file
 set_var() {
   local k=$1 v=$2
   if grep -qE "^#?[[:space:]]*${k}=" "$CONF"; then
@@ -52,7 +50,6 @@ comment_out() { sed -i -E "s|^(${1}=.*)|#\1|" "$CONF"; }
 HIDDEN_FILE=${GRUB_HIDDEN:-/etc/grub-hidden-entries}
 ORDER_FILE=${GRUB_ORDER:-/etc/grub-entry-order}
 
-# Hide entries listed in $HIDDEN_FILE and apply the order in $ORDER_FILE
 filter_entries() {
   local cfg=$1
   [[ -s "$HIDDEN_FILE" || -s "$ORDER_FILE" ]] || return 0
@@ -81,7 +78,6 @@ icon_tier() {
   if (( w >= 3000 )); then echo 4k; elif (( w >= 2000 )); then echo 2k; else echo 1080p; fi
 }
 
-# Replace the theme's bundled icons with the chosen variant (if one was chosen)
 apply_icons() {
   [[ -n "$ICONS" ]] || return 0
   local src="$REPO_DIR/assets/assets-$ICONS/icons-$(icon_tier)"
@@ -101,7 +97,6 @@ install_theme() {
   [[ -f "$CONF.bak" ]] || cp -a "$CONF" "$CONF.bak"
   set_var GRUB_THEME "\"$THEMES_DEST/$theme/theme.txt\""
   set_var GRUB_GFXMODE "$RES,auto"
-  # the theme is ignored if GRUB falls back to the plain console
   comment_out GRUB_TERMINAL
   comment_out GRUB_TERMINAL_OUTPUT
   sed -i -E 's|^GRUB_BACKGROUND=|#&|' "$CONF"
@@ -150,7 +145,6 @@ for d in "$REPO_DIR"/assets/assets-*/; do
   [[ $n == select ]] || ICON_SETS+=("$n")
 done
 
-# ask TITLE DEFAULT OPTION... -> prints the chosen option (whiptail/dialog, else plain prompt)
 ask() {
   local title=$1 def=$2; shift 2
   local opts=("$@")
@@ -185,7 +179,6 @@ tui() {
   ICONS=$(ask "Choose an icon set" "${ICONS:-keep}" keep "${ICON_SETS[@]}")
   [[ $ICONS == keep ]] && ICONS=""
   action=install
-  # re-run as root with the choices
   if [[ $EUID -ne 0 ]]; then
     exec sudo "$0" -t "$theme" -c "$RES" ${ICONS:+-i "$ICONS"}
   fi
