@@ -29,7 +29,14 @@ sudo ./install.sh -t windows -c 2560x1440     # set resolution (any WxH)
 sudo ./install.sh -r gruvbox                  # remove
 ./install.sh -l                               # list themes
 ```
-Other flags: `-i color|white|whitesur` (icons), `-g DIR` (copy only).
+```
+-t THEME     theme to install          -c WxH      resolution (any)
+-i SET       icons: color|white|whitesur  -T SECS  boot timeout (-1 = wait)
+-r THEME     remove a theme            -U          uninstall all, restore defaults
+-s           re-apply hidden entries   -g DIR      copy theme only
+-l           list themes               -u          interactive menu
+-h           help
+```
 
 Customize by hand: edit `themes/<name>/theme.txt`, then re-run the installer.
 
