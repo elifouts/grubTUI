@@ -1,0 +1,5 @@
+previews/* linguist-generated
+assets/** linguist-vendored
+themes/** linguist-vendored
+*.py linguist-language=Python
+*.sh linguist-language=Shell
