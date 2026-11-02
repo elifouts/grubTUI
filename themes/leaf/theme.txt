@@ -7,8 +7,8 @@ terminal-height: "100%"
 terminal-border: "0"
 
 + boot_menu {
-  left = 182
-  top = 169
+  left = 601
+  top = 405
   width = 717
   height = 272
   item_font = "JB Nerd Regular 20"
@@ -25,16 +25,16 @@ terminal-border: "0"
 }
 
 + image {
-  left = 333
-  top = 473
+  left = 754
+  top = 714
   width = 412
   height = 36
   file = "info.png"
 }
 
 + label {
-  left = 189
-  top = 102
+  left = 614
+  top = 312
   width = 691
   align = "center"
   id = "__timeout__"
