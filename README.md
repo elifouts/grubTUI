@@ -73,12 +73,19 @@ For a glass card, invisible highlight, and custom countdown:
 
 `set KEY VALUE` supports:
 
-- `name`: letters, digits, `-`, `_`; `wallpaper`: png, jpg, webp, bmp, gif, or tiff
-- `resolution`: any `WxH` (common sizes: `1280x720`, `1366x768`, `1600x900`, `1920x1080`, `1920x1200`, `2560x1080`, `2560x1440`, `2560x1600`, `3440x1440`, `3840x2160`)
-- `card_style`, `highlight_style`: `blurry`, `full`, or `invisible`
-- `card_color`, `text`, `selected_text`, `highlight`, `info_color`, `timeout_color`: `#rrggbb`
-- `radius`: 0-80; `font_size`: 12-64; `item_spacing`: 0-40; `icon_size`: 16-96
-- `entries`: `auto` or a number; `timeout_text`: include `%d` once
+| Setting | Accepted values |
+|---|---|
+| `name` | Letters, digits, `-`, `_` |
+| `wallpaper` | `png`, `jpg`, `webp`, `bmp`, `gif`, `tiff` |
+| `resolution` | Any `WxH` (e.g. `1920x1080`, `2560x1440`, `3440x1440`, `3840x2160`) |
+| `card_style`, `highlight_style` | `blurry`, `full`, `invisible` |
+| `card_color`, `text`, `selected_text`, `highlight`, `info_color`, `timeout_color` | `#rrggbb` |
+| `radius` | `0–80` |
+| `font_size` | `12–64` |
+| `item_spacing` | `0–40` |
+| `icon_size` | `16–96` |
+| `entries` | `auto` or a number |
+| `timeout_text` | Include `%d` once |
 
 Settings are saved in `~/.cache/grub-theme-tui/working.json`. Build creates `themes/<name>` and `previews/<name>.png`.
 
