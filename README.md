@@ -11,11 +11,11 @@ A terminal interface to install, create, edit, and manage GRUB themes. Based on 
   <img src="previews/cat.png" width="30%" />
   <img src="previews/gruvbox.png" width="30%" />
 </p>
-## Requirements
 
-**Warning:** Pillow is required to run the TUI and create or edit themes. Install it with `pip install -r requirements.txt`.
-
-Bash, sudo, GRUB, and Python 3 are also required.
+> [!WARNING]
+> **Requirements:** Pillow is required to run the TUI and create or edit themes. Install dependencies with `pip install -r requirements.txt`.
+>
+> Bash, sudo, GRUB, and Python 3 are also required.
 
 ## TUI
 
