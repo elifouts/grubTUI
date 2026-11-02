@@ -1,4 +1,4 @@
-# GRUB Theme Studio
+# GRUB Theme tui
 
 A terminal interface to install, create, edit, and manage GRUB themes. Based on [grub2-themes](https://github.com/vinceliuice/grub2-themes).
 
