@@ -1,6 +1,8 @@
 # GRUB Theme tui
 
-A terminal interface to install, create, edit, and manage GRUB themes. Based on [grub2-themes](https://github.com/vinceliuice/grub2-themes).
+A terminal interface to install, create, edit, and manage GRUB themes. 
+
+Based on [grub2-themes](https://github.com/vinceliuice/grub2-themes).
 
 <p align="center">
   <img src="previews/image2.png" width="30%" />
