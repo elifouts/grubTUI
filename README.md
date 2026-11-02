@@ -2,11 +2,10 @@
 
 A terminal interface to install, create, edit, and manage GRUB themes. Based on [grub2-themes](https://github.com/vinceliuice/grub2-themes).
 
-## Screenshots
-
-![Main menu](previews/image2.png)
-
-![Layout editor](previews/image.png)
+<p align="center">
+  <img src="previews/image2.png" width="49%" />
+  <img src="previews/image.png" width="49%" />
+</p>
 
 ## Requirements
 
