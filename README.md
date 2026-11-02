@@ -3,13 +3,15 @@
 A terminal interface to install, create, edit, and manage GRUB themes. Based on [grub2-themes](https://github.com/vinceliuice/grub2-themes).
 
 <p align="center">
-  <img src="previews/image2.png" width="40%" />
-  <img src="previews/image.png" width="40%" />
+  <img src="previews/image2.png" width="30%" />
+  <img src="previews/image.png" width="30%" />
+  <img src="previews/image3.png" width="30%" />
 </p>
 <p align="center">
   <img src="previews/windows.png" width="30%" />
   <img src="previews/cat.png" width="30%" />
   <img src="previews/gruvbox.png" width="30%" />
+  
 </p>
 
 > [!WARNING]
