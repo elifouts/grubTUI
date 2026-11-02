@@ -11,7 +11,7 @@ terminal-border: "0"
   left = 1035
   top = 77
   width = 700
-  height = 300
+  height = 272
   item_font = "JB Nerd Regular 26"
   item_color = "#ffffff"
   selected_item_color = "#0a78d7"
@@ -21,7 +21,6 @@ terminal-border: "0"
   item_height = 40
   item_padding = 8
   item_spacing = 16
-  menu_pixmap_style = "menu_*.png"
   item_pixmap_style = "item_*.png"
   selected_item_pixmap_style = "select_*.png"
 }

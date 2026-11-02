@@ -11,10 +11,10 @@ terminal-border: "0"
   left = 602
   top = 424
   width = 700
-  height = 204
+  height = 222
   item_font = "JB Nerd Regular 20"
   item_color = "#8ab5c8"
-  selected_item_color = "#ca8eb2"
+  selected_item_color = "#101820"
   icon_width = 24
   icon_height = 24
   item_icon_space = 20

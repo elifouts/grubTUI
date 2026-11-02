@@ -10,7 +10,7 @@
                                     icon_size, entries
   grub-custom.py layout             drag/resize the boot menu, info bar and countdown label
   grub-custom.py list               list themes (name<TAB>bundled|variant|builder)
-  grub-custom.py edit THEME RESULT  edit a theme's layout; saves as THEME-mineN, writes its name to RESULT
+  grub-custom.py edit THEME RESULT  edit a theme's layout; saves into THEME, writes its name to RESULT
   grub-custom.py delete NAME        delete one of your themes (never bundled ones)
   grub-custom.py preview [THEME]    render previews/<theme>.png (all themes if omitted)
   grub-custom.py build              convert the wallpaper and generate themes/<name>
@@ -474,7 +474,8 @@ def build(cfg):
     mx, my, mw, mh = cfg["layout"]["menu"]
     count = entry_count(cfg)
     # the card hugs the entries; the layout height is only the maximum
-    list_h = min(mh, count * (item_h + spacing) + 2 * pad_sel + 16)
+    # GRUB's row stride is item_height + 2*item_padding + item_spacing; the height must hold every row or the list scrolls
+    list_h = count * (item_h + 16 + spacing) - spacing
     draw_card(img, (mx - pad, my - pad, mw + 2 * pad, list_h + 2 * pad), cfg["card_style"], radius, cfg["card_color"])
 
     shutil.rmtree(out, ignore_errors=True)
@@ -637,43 +638,29 @@ def write_layout(theme_txt, lay):
     open(theme_txt, "w").write(BLOCK.sub(patch, text))
 
 
-def next_variant_name(base):
-    base = re.sub(r"-mine\d+$", "", base)
-    n = 1
-    while os.path.exists(os.path.join(themes_root(), f"{base}-mine{n}")):
-        n += 1
-    return f"{base}-mine{n}"
-
-
 def edit_theme_layout(theme, result_file):
     src = os.path.join(themes_root(), theme)
     if not os.path.isfile(os.path.join(src, "theme.txt")):
         sys.exit(f"unknown theme '{theme}'")
     info = marker(theme)
     if info and info["kind"] == "builder":
-        sys.exit("this theme was made by the wallpaper builder: edit its layout from Create a theme > Layout editor")
-    res = (info or {}).get("resolution", "1920x1080")
+        sys.exit("wallpaper-built themes keep their layout in their build settings")
+    res = (info or {}).get("resolution") or (info or {}).get("cfg", {}).get("resolution", "1920x1080")
     W, H = parse_res(res)
     lay = parse_layout(os.path.join(src, "theme.txt"), W, H)
     if not lay:
         sys.exit("no boot menu found in theme.txt")
-    # editing an existing variant happens in place; bundled themes fork a new -mineN copy
-    target = theme if info else next_variant_name(theme)
-    base = (info or {}).get("base", theme)
+    target = theme
     cfg = {"resolution": res, "layout": lay}
 
     def save_variant(c):
         dest = os.path.join(themes_root(), target)
-        if not os.path.isdir(dest):
-            shutil.copytree(src, dest)
-            json.dump({"kind": "variant", "base": base, "resolution": res}, open(os.path.join(dest, MARKER), "w"))
-            write_item_pads(dest)
-            tx = os.path.join(dest, "theme.txt")
-            text = open(tx).read()
-            open(tx, "w").write(BLOCK.sub(
-                lambda m: f"+ {m.group(1)} {{{set_prop(m.group(2), 'item_pixmap_style', 'item_*.png')}}}" if m.group(1) == "boot_menu" else m.group(0),
-                text))
+        if not info:
+            adopt_theme(theme)
         write_layout(os.path.join(dest, "theme.txt"), c["layout"])
+        st = (marker(theme) or {}).get("style", {})
+        if st.get("card_style", "invisible") != "invisible":
+            bake_card(dest, st["card_style"], int(st.get("radius", 9)), st.get("card_color", "#101820"))
         preview(target)
 
     if curses.wrapper(editor, cfg, save_variant):
@@ -714,6 +701,47 @@ def style_load(theme):
     save(cfg)
 
 
+def adopt_theme(theme):
+    """Make a plain theme editable in place: mark it and give its menu item pads."""
+    dest = os.path.join(themes_root(), theme)
+    if not os.path.isfile(os.path.join(dest, "theme.txt")):
+        sys.exit(f"unknown theme '{theme}'")
+    if marker(theme):
+        return
+    json.dump({"kind": "variant", "base": theme, "resolution": "1920x1080"}, open(os.path.join(dest, MARKER), "w"))
+    write_item_pads(dest)
+    tx = os.path.join(dest, "theme.txt")
+    text = open(tx).read()
+    open(tx, "w").write(BLOCK.sub(
+        lambda m: f"+ {m.group(1)} {{{set_prop(m.group(2), 'item_pixmap_style', 'item_*.png')}}}" if m.group(1) == "boot_menu" else m.group(0),
+        text))
+
+
+def bake_card(d, style, radius, color):
+    """Same frosted/solid card as the wallpaper builder: render it into background.jpg from the untouched
+    original (kept as background.orig.jpg) behind the boot menu as laid out in theme.txt."""
+    bg, orig = os.path.join(d, "background.jpg"), os.path.join(d, "background.orig.jpg")
+    if not os.path.isfile(orig):
+        shutil.copy(bg, orig)
+    img = Image.open(orig).convert("RGB")
+    W, H = img.size
+    tx = os.path.join(d, "theme.txt")
+    lay = parse_layout(tx, W, H).get("menu")
+    if lay and style != "invisible":
+        text = open(tx).read()
+        props = {}
+        for m in BLOCK.finditer(text):
+            if m.group(1) == "boot_menu":
+                props = dict(re.findall(r"^\s*(\w+)\s*=\s*(.+?)\s*$", m.group(2), re.M))
+        mx, my, mw, mh = lay
+        item_h = (expr_px(props.get("item_height", "40"), H) + 2 * expr_px(props.get("item_padding", "8"), W)
+                  + expr_px(props.get("item_spacing", "0"), H))
+        list_h = entry_count({}) * item_h - expr_px(props.get("item_spacing", "0"), H)
+        pad = 20
+        draw_card(img, (mx - pad, my - pad, mw + 2 * pad, list_h + 2 * pad), style, radius, color)
+    img.save(bg, "JPEG", quality=92)
+
+
 def set_prop(body, key, value):
     if re.search(rf"^\s*{key}\s*=", body, re.M):
         return re.sub(rf"^(\s*{key}\s*=).*$", lambda m: f'{m.group(1)} "{value}"', body, flags=re.M)
@@ -732,33 +760,59 @@ def restyle(theme, cfg):
     def patch(m):
         kind, body = m.group(1), m.group(2)
         if kind == "boot_menu":
+            bp = dict(re.findall(r"^\s*(\w+)\s*=\s*(.+?)\s*$", body, re.M))
+            sp = expr_px(bp.get("item_spacing", "0"), 1080)
+            stride = expr_px(bp.get("item_height", "40"), 1080) + 2 * expr_px(bp.get("item_padding", "8"), 1920) + sp
+            body = re.sub(r"^(\s*height\s*=).*$", lambda mm: f"{mm.group(1)} {entry_count(cfg) * stride - sp}", body, flags=re.M)
             body = set_prop(body, "item_color", cfg["text"])
             body = set_prop(body, "selected_item_color", cfg["selected_text"])
             body = set_prop(body, "selected_item_pixmap_style", "select_*.png")
             body = set_prop(body, "item_pixmap_style", "item_*.png")
-            if cfg["card_style"] == "invisible":
-                body = re.sub(r"^\s*menu_pixmap_style\s*=.*\n", "", body, flags=re.M)
-            else:
-                body = set_prop(body, "menu_pixmap_style", "menu_*.png")
+            body = re.sub(r"^\s*menu_pixmap_style\s*=.*\n", "", body, flags=re.M)
         elif kind == "label" and "__timeout__" in body:
             body = set_prop(body, "color", cfg["timeout_color"])
             body = set_prop(body, "text", cfg["timeout_text"])
         return f"+ {kind} {{{body}}}"
 
-    new_text = BLOCK.sub(patch, open(tx).read())
-    open(tx, "w").write(new_text)
-    if cfg["highlight"] != old.get("highlight", "#ffffff") or cfg["radius"] != old.get("radius", 9) or cfg["highlight_style"] != old.get("highlight_style", "full"):
+    wp = os.path.expanduser(cfg.get("wallpaper") or "")
+    style = {k: cfg[k] for k in STYLE_KEYS}
+    if wp:
+        style["wallpaper"] = wp
+    first = "style" not in info
+    changed = [k for k in style if first or style[k] != old.get(k)]
+    text = open(tx).read()
+    new_text = BLOCK.sub(patch, text)
+    if not changed and not first and new_text == text:
+        print(f"Nothing to change in '{theme}'")
+        return
+
+    if new_text != text:
+        open(tx, "w").write(new_text)
+
+    sel_missing = not os.path.isfile(os.path.join(d, "select_c.png"))
+    if first or sel_missing or {"highlight", "highlight_style", "radius"} & set(changed):
         write_highlight(d, cfg["highlight"], int(cfg["radius"]), cfg["highlight_style"])
-    write_item_pads(d)
-    write_menu_box(d, cfg["card_color"], int(cfg["radius"]), cfg["card_style"])
-    if cfg["info_color"] != old.get("info_color", "#ffffff"):
+        write_item_pads(d)
+    if any(os.path.isfile(os.path.join(d, f"menu_{n}.png")) for n in NINE):
+        write_menu_box(d, cfg["card_color"], int(cfg["radius"]), "invisible")
+
+    new_wp = wp and "wallpaper" in changed and os.path.isfile(wp)
+    if new_wp:
+        W, H = parse_res(info.get("resolution", "1920x1080"))
+        orig = os.path.join(d, "background.orig.jpg")
+        prepare_wallpaper(wp, W, H).save(orig, "JPEG", quality=92)
+        shutil.copy(orig, os.path.join(d, "background.jpg"))
+    if new_wp or text != new_text or {"card_style", "card_color", "radius"} & set(changed) or (first and cfg["card_style"] != "invisible"):
+        bake_card(d, cfg["card_style"], int(cfg["radius"]), cfg["card_color"])
+    if "info_color" in changed and cfg["info_color"] != old.get("info_color", "#ffffff"):
         img = Image.open(os.path.join(d, "info.png")).convert("RGBA")
         tint = Image.new("RGBA", img.size, hex_rgb(cfg["info_color"]) + (255,))
         tint.putalpha(img.getchannel("A"))
         tint.save(os.path.join(d, "info.png"))
-    info["style"] = {k: cfg[k] for k in STYLE_KEYS}
+    info["style"] = style
     json.dump(info, open(os.path.join(d, MARKER), "w"))
-    preview(theme)
+    if new_wp or {"card_style", "card_color", "radius", "highlight", "highlight_style", "text", "selected_text", "timeout_color", "timeout_text", "info_color"} & set(changed) or first:
+        preview(theme)
     print(f"Restyled '{theme}'")
 
 
@@ -880,9 +934,7 @@ def preview(theme):
             if "menu_pixmap_style" in props:
                 paste_box(img, d, "menu", (x, y, w, h))
             for n, (label, icon) in enumerate(entries):
-                iy = y + n * (ih + sp)
-                if iy + ih > y + h + ih:
-                    break
+                iy = y + n * (ih + 2 * pad + sp) + pad
                 sel = n == 0
                 if sel:
                     paste_box(img, d, "select", (x, iy, w, ih))
@@ -980,6 +1032,8 @@ def main():
         list_themes()
     elif cmd == "edit":
         edit_theme_layout(args[0], args[1])
+    elif cmd == "adopt":
+        adopt_theme(args[0])
     elif cmd == "style-load":
         style_load(args[0])
     elif cmd == "restyle":

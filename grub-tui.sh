@@ -164,11 +164,7 @@ run_action() { # show command output on a clean screen
 screen_install() {
   local items=() name kind
   while IFS=$'\t' read -r name kind; do
-    case $kind in
-      bundled) items+=("$name::Ready-made theme") ;;
-      variant) items+=("$name::Your edited copy of a theme") ;;
-      *) items+=("$name::Built from your wallpaper") ;;
-    esac
+    items+=("$name::Theme")
   done < <(python3 "$CUSTOM_PY" list)
   menu "Choose a theme" "" "${items[@]}" || return
   local theme=$CHOSEN
@@ -370,6 +366,9 @@ screen_appearance() {
     keys+=(card_style card_color)
     labels+=("Corner radius          $(cfg_get radius) px")
     keys+=(radius)
+    local wpl; wpl=$(cfg_get wallpaper); wpl=${wpl:-<unchanged>}; ((${#wpl} > 30)) && wpl="…${wpl: -29}"
+    labels+=("Background image       $wpl")
+    keys+=(wallpaper)
     if [[ -z ${STYLE_ONLY:-} ]]; then
       labels+=("Font size              $(cfg_get font_size)" "Icon size              $(cfg_get icon_size)" "Item spacing           $(cfg_get item_spacing)")
       keys+=(font_size icon_size item_spacing)
@@ -387,6 +386,7 @@ screen_appearance() {
       card_style) menu "Menu background style" "blurry = frosted glass · full = solid · invisible = no background" blurry full invisible || continue
          custom_set card_style "$(printf '%s\n' blurry full invisible | sed -n "$((CHOICE + 1))p")" ;;
       card_color) pick_color "Menu background color" card_color ;;
+      wallpaper) ask_text "Path to background image (png/jpg/webp/…)" "$(cfg_get wallpaper)"; [[ -n $REPLY ]] && custom_set wallpaper "$REPLY" ;;
       radius) radius_slider "$(cfg_get radius)" && custom_set radius "$RADIUS" ;;
       font_size) pick_number "Font size" font_size 18 20 22 24 26 28 30 32 36 ;;
       icon_size) pick_number "Icon size" icon_size 24 32 48 64 ;;
@@ -434,17 +434,24 @@ screen_timeout() {
   [[ -n $val ]] && run_action "Setting boot timeout to $val" $SUDO "$INSTALL" -T "$val"
 }
 
-# Pick a bundled theme or one of your themes, drag/resize its layout, save as <theme>-mineN and apply it
+# Pick a theme, drag/resize its layout, save into it and apply it
 screen_edit_layout() {
   local items=() name kind res=$TMPDIR_UI/result
   while IFS=$'\t' read -r name kind; do
     case $kind in
-      bundled) items+=("$name::Opens the editor; saves a new copy named ${name}-mineN and applies it") ;;
-      variant) items+=("$name::Your copy: changes are saved into it and applied") ;;
+      *) items+=("$name::Changes are saved into it and applied") ;;
     esac
   done < <(python3 "$CUSTOM_PY" list)
   menu "Edit the layout of…" "Drag the boot menu, info tabs and countdown anywhere" "${items[@]}" || return
   local theme=$CHOSEN
+  if [[ $(python3 "$CUSTOM_PY" list | awk -F'\t' -v t="$theme" '$1==t {print $2}') == builder ]]; then
+    local GRUB_CUSTOM_CFG=$TMPDIR_UI/style.json; export GRUB_CUSTOM_CFG
+    if python3 "$CUSTOM_PY" style-load "$theme"; then
+      python3 "$CUSTOM_PY" layout; printf '\e[?25l'
+      run_action "Rebuilding $theme" build_and_apply
+    fi
+    unset GRUB_CUSTOM_CFG; return
+  fi
   rm -f "$res"
   python3 "$CUSTOM_PY" edit "$theme" "$res"; printf '\e[?25l'
   if [[ -s $res ]]; then
@@ -467,6 +474,10 @@ restyle_and_install() { # NAME
 # Change the colors/card/fonts of a custom theme you already made, then rebuild and apply it
 edit_appearance() { # NAME KIND
   local name=$1 kind=$2 out
+  if [[ $kind == bundled ]]; then
+    python3 "$CUSTOM_PY" adopt "$name" || return
+    kind=variant
+  fi
   local GRUB_CUSTOM_CFG=$TMPDIR_UI/style.json
   export GRUB_CUSTOM_CFG
   if ! out=$(python3 "$CUSTOM_PY" style-load "$name" 2>&1); then
@@ -491,12 +502,11 @@ screen_my_themes() {
   while true; do
     items=(); act=$(active_theme)
     while IFS=$'\t' read -r name kind; do
-      [[ $kind == bundled ]] && continue
       kinds[$name]=$kind
       local st="not installed"
       theme_installed "$name" && st="installed"
       [[ $name == "$act" ]] && st="ACTIVE in GRUB"
-      items+=("$name::$st · $([[ $kind == variant ]] && echo 'edited copy' || echo 'wallpaper theme')")
+      items+=("$name::$st")
     done < <(python3 "$CUSTOM_PY" list)
     if ((${#items[@]} == 0)); then
       run_action "My themes" bash -c 'echo "You have no themes yet."; echo; echo "Create one from \"Create a theme from your wallpaper\" or \"Edit the layout of a theme\"."'
@@ -504,7 +514,11 @@ screen_my_themes() {
     fi
     menu "My themes" "Select a theme to apply or delete it" "${items[@]}" || return
     name=$CHOSEN
-    menu "$name" "" "Apply in GRUB::Install it and make it the active theme" "Edit appearance::Colors, highlight, countdown$([[ ${kinds[$name]} == builder ]] && echo ', card, fonts, spacing')" "Delete::Remove it from GRUB and from this folder" "Back" || continue
+    if [[ ${kinds[$name]} == bundled ]]; then
+      menu "$name" "" "Apply in GRUB::Install it and make it the active theme" "Edit appearance::Colors, background, highlight" "Back" || continue
+    else
+      menu "$name" "" "Apply in GRUB::Install it and make it the active theme" "Edit appearance::Colors, highlight, countdown$([[ ${kinds[$name]} == builder ]] && echo ', card, fonts, spacing')" "Delete::Remove it from GRUB and from this folder" "Back" || continue
+    fi
     case $CHOSEN in
       Edit*) edit_appearance "$name" "${kinds[$name]}" ;;
       Apply*) run_action "Applying $name" $SUDO "$INSTALL" -t "$name" -c "$(python3 "$CUSTOM_PY" get resolution)" ;;
@@ -524,10 +538,10 @@ while true; do
   inst=$(installed_list | paste -sd, -); act=$(active_theme)
   NUMBERED=1 menu "Main menu" "installed: ${inst:-none} · active: ${act:-none}" \
     "##Themes" \
-    "Install a theme::Pick a ready-made or your own theme and put it in GRUB" \
+    "Install a theme::Pick a theme and put it in GRUB" \
     "Create a theme from a wallpaper::Your own image, colors, rounded cards and layout" \
-    "Edit the layout of a theme::Drag the menu around; saved as a new <theme>-mine1 copy and applied" \
-    "My themes::Apply, restyle or delete the themes you made" \
+    "Edit the layout of a theme::Drag the menu around; saved into the theme and applied" \
+    "My themes::Apply, restyle or delete your themes" \
     "##Boot menu" \
     "Boot entries::Hide, show and reorder Windows, Arch, ..." \
     "Boot timeout::How long GRUB waits before booting the default" \
