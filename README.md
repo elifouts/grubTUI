@@ -1,4 +1,4 @@
-[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&duration=3000&pause=1000&color=DD7C4A&multiline=true&width=435&lines=GrubTUI%24Your+bootloader%2C+your+style)](https://git.io/typing-svg)
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&duration=3000&pause=1000&color=DD7C4A&multiline=true&width=435&lines=GrubTUI%24)](https://git.io/typing-svg)
 
 A terminal interface to install, create, edit, and manage GRUB themes. 
 
