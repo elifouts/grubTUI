@@ -20,6 +20,12 @@ Based on [grub2-themes](https://github.com/vinceliuice/grub2-themes).
   
 </p>
 
+# Download
+
+```
+git clone https://github.com/elifouts/grubTUI.git && cd grubTUI/
+```
+
 > [!WARNING]
 > **Requirements:** Pillow is required to run the TUI and create or edit themes. Install dependencies with `pip install -r grub-theme-tui/requirements.txt`.
 >
