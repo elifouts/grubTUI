@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
-INSTALL="$REPO_DIR/install.sh"
-CUSTOM_PY="$REPO_DIR/grub-custom.py"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$SCRIPT_DIR/grub-theme-tui"
+INSTALL="$SCRIPT_DIR/install.sh"
+CUSTOM_PY="$SCRIPT_DIR/grub-custom.py"
 if [[ -n "${GRUB_DIR:-}" ]]; then :
 elif [[ -d /boot/grub2 && ! -d /boot/grub ]]; then GRUB_DIR=/boot/grub2
 else GRUB_DIR=/boot/grub; fi

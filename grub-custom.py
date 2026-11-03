@@ -12,8 +12,8 @@
   grub-custom.py list               list themes (name<TAB>bundled|variant|builder)
   grub-custom.py edit THEME RESULT  edit a theme's layout; saves into THEME, writes its name to RESULT
   grub-custom.py delete NAME        delete one of your themes (never bundled ones)
-  grub-custom.py preview [THEME]    render previews/<theme>.png (all themes if omitted)
-  grub-custom.py build              convert the wallpaper and generate themes/<name>
+  grub-custom.py preview [THEME]    render grub-theme-tui/previews/<theme>.png (all themes if omitted)
+  grub-custom.py build              convert the wallpaper and generate grub-theme-tui/themes/<name>
 """
 import copy
 import curses
@@ -30,7 +30,7 @@ try:
 except ImportError:
     sys.exit("Pillow is required: pacman -S python-pillow | apt install python3-pil | dnf install python3-pillow | pip install pillow")
 
-REPO = os.path.dirname(os.path.abspath(__file__))
+REPO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "grub-theme-tui")
 CFG = os.environ.get("GRUB_CUSTOM_CFG") or os.path.join(os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache"), "grub-theme-tui", "working.json")
 BASE = os.path.join(REPO, "assets", "builder-base")
 NERD_TTF = [
@@ -948,7 +948,7 @@ def paste_box(img, d, prefix, rect):
 
 
 def preview(theme):
-    """Render previews/<theme>.png from the installed theme files (background, boot menu, icons, info bar, countdown)."""
+    """Render grub-theme-tui/previews/<theme>.png from the installed theme files."""
     d = os.path.join(themes_root(), theme)
     text = open(os.path.join(d, "theme.txt")).read()
     img = Image.open(os.path.join(d, "background.jpg")).convert("RGBA")
@@ -994,7 +994,7 @@ def preview(theme):
     out = os.path.join(REPO, "previews")
     os.makedirs(out, exist_ok=True)
     img.convert("RGB").resize((1280, round(1280 * H / W)), Image.LANCZOS).save(os.path.join(out, f"{theme}.png"), optimize=True)
-    print(f"Preview: previews/{theme}.png")
+    print(f"Preview: grub-theme-tui/previews/{theme}.png")
 
 
 def delete_theme(name):

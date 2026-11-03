@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_DIR="$SCRIPT_DIR/grub-theme-tui"
 THEMES=()
 for d in "$REPO_DIR"/themes/*/; do THEMES+=("$(basename "$d")"); done
 RES="1920x1080"

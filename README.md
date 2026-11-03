@@ -9,19 +9,19 @@ A terminal interface to install, create, edit, and manage GRUB themes.
 Based on [grub2-themes](https://github.com/vinceliuice/grub2-themes).
 
 <p align="center">
-  <img src="previews/image2.png" width="30%" />
-  <img src="previews/image.png" width="30%" />
-  <img src="previews/image3.png" width="30%" />
+  <img src="grub-theme-tui/previews/image2.png" width="30%" />
+  <img src="grub-theme-tui/previews/image.png" width="30%" />
+  <img src="grub-theme-tui/previews/image3.png" width="30%" />
 </p>
 <p align="center">
-  <img src="previews/windows.png" width="30%" />
-  <img src="previews/cat.png" width="30%" />
-  <img src="previews/gruvbox.png" width="30%" />
+  <img src="grub-theme-tui/previews/windows.png" width="30%" />
+  <img src="grub-theme-tui/previews/cat.png" width="30%" />
+  <img src="grub-theme-tui/previews/gruvbox.png" width="30%" />
   
 </p>
 
 > [!WARNING]
-> **Requirements:** Pillow is required to run the TUI and create or edit themes. Install dependencies with `pip install -r requirements.txt`.
+> **Requirements:** Pillow is required to run the TUI and create or edit themes. Install dependencies with `pip install -r grub-theme-tui/requirements.txt`.
 >
 > Bash, sudo, GRUB, and Python 3 are also required.
 
@@ -97,7 +97,7 @@ For a glass card, invisible highlight, and custom countdown:
 | `entries` | `auto` or a number |
 | `timeout_text` | Include `%d` once |
 
-Settings are saved in `~/.cache/grub-theme-tui/working.json`. Build creates `themes/<name>` and `previews/<name>.png`.
+Settings are saved in `~/.cache/grub-theme-tui/working.json`. Build creates `grub-theme-tui/themes/<name>` and `grub-theme-tui/previews/<name>.png`.
 
 ## Other commands
 
@@ -111,6 +111,6 @@ Settings are saved in `~/.cache/grub-theme-tui/working.json`. Build creates `the
 ./grub-custom.py delete NAME       # delete a created theme
 ```
 
-You can also edit `themes/<name>/theme.txt` by hand, then reinstall the theme.
+You can also edit `grub-theme-tui/themes/<name>/theme.txt` by hand, then reinstall the theme.
 
 Original themes by Vince Liuice. GPL-3.0.
