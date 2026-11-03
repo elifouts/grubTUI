@@ -1,4 +1,8 @@
-[![Typing SVG](https://readme-typing-svg.demolab.com?font=Fira+Code&duration=3000&pause=1000&color=DD7C4A&multiline=true&width=435&lines=GrubTUI%24)](https://git.io/typing-svg)
+<p align="center">
+  <a href="https://git.io/typing-svg">
+    <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&duration=3000&pause=1000&color=DD7C4A&center=true&multiline=true&width=435&lines=GrubTUI%24" alt="Typing SVG" />
+  </a>
+</p>
 
 A terminal interface to install, create, edit, and manage GRUB themes. 
 
