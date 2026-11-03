@@ -119,4 +119,4 @@ Settings are saved in `~/.cache/grub-theme-tui/working.json`. Build creates `gru
 
 You can also edit `grub-theme-tui/themes/<name>/theme.txt` by hand, then reinstall the theme.
 
-Original themes by Vince Liuice. GPL-3.0.
+
